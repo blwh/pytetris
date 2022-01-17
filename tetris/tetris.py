@@ -1,6 +1,5 @@
 import numpy as np
 import tetromino
-import time
 import random
 
 
@@ -101,9 +100,9 @@ class Tetris(object):
         # If going outside of game board
         if blocks[:, 0].min() < 0 or blocks[:, 0].max() >= self._width:
             return 1
-        elif max(blocks[:, 1]) == self._height:
-            return 2
-        elif np.any(self._board[blocks[:, 0], blocks[:, 1]]):
+        # Hits end or another block
+        elif max(blocks[:, 1]) == self._height \
+                or np.any(self._board[blocks[:, 0], blocks[:, 1]]):
             return 2
 
         return 0
@@ -138,35 +137,3 @@ class Tetris(object):
             temp = self._board[:, nzrows]
             self._board *= 0
             self._board[:, nind] = temp
-
-    def print_board(self):
-        """TODO: Docstring for print_board.
-        :returns: TODO
-
-        """
-        for i in range(self._height):
-            row = ''
-            for j in range(self._width):
-                row += str(self._board[j, i])
-            print(row)
-        print('')
-
-
-if __name__ == "__main__":
-
-    tetris = Tetris(14, 30)
-    tetris.print_board()
-    tetris.add_tetromino()
-
-    while True:
-        # tetris.add_active()
-        tetris.print_board()
-        time.sleep(0.2)
-        # tetris.remove_active()
-        if not tetris.game_tick():
-            # tetris.add_active()
-            tetris.check_rows()
-            if not tetris.add_tetromino():
-                break
-
-    print('You failed')

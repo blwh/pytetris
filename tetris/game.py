@@ -1,5 +1,5 @@
 # PyQt5 imports
-from PyQt5.QtCore import QBasicTimer, Qt, pyqtSignal
+from PyQt5.QtCore import QTimer, QBasicTimer, Qt, pyqtSignal
 from PyQt5.QtWidgets import (
         QMainWindow, QApplication, QFrame, QWidget, QLabel
         )
@@ -123,9 +123,6 @@ class TetrisBoard(QFrame):
     score_label = pyqtSignal(str)
     tetrominoqueue = pyqtSignal()
 
-    # timer countdown time
-    SPEED = 160
-
     # Lock time (ms)
     LOCKTIME = 500
 
@@ -137,12 +134,20 @@ class TetrisBoard(QFrame):
         self.tetris = tetris
         # and get the dimensions
         self.gamedims = [self.tetris._width, self.tetris._height]
+        # msec per tick
+        self.tick_interval = 50
 
-        # Game timer and lock timer
-        self.timer = QBasicTimer()
-        self.lock_timer = QBasicTimer()
+        # TODO: This might be a bit inefficient
+        self.nskips = 3  # number of skipped ticks if not soft-dropping
+        self.skips = 0
 
-        self.lock = False
+        self.game_timer = QTimer(self)
+        self.game_timer.timeout.connect(self.game_tick)
+        self.lock_timer = QTimer(self)
+        self.lock_timer.timeout.connect(self.lock_event)
+
+        self.lock = False  # If lock timer is initialized
+        self.soft_drop = False  # If soft dropping
 
     def square_width(self):
         return int(self.contentsRect().width()/self.gamedims[0])
@@ -152,33 +157,38 @@ class TetrisBoard(QFrame):
 
     def start(self):
         # starting timer
-        self.timer.start(TetrisBoard.SPEED, self)
+        self.game_timer.start(self.tick_interval)
         # Add the first tetromino
         self.tetris.spawn_tetromino()
 
-    def timerEvent(self, event):
+    def lock_event(self):
 
-        # Main timer
-        if event.timerId() == self.timer.timerId():
-            coll_id = self.tetris.game_tick()
-            if coll_id == 2:
-                if not self.lock:
-                    self.lock_timer.start(TetrisBoard.LOCKTIME, self)
-                    self.lock = True
-
-        # Lock event timer
-        if event.timerId() == self.lock_timer.timerId():
-            self.tetris.lock_active()  # Lock the piece to the board
-            self.tetris.check_rows()  # Check which rows to remove
-            # Signal to update next and scores
-            self.tetrominoqueue.emit()
-            self.score_label.emit('Score: ' + str(self.tetris._score))
-            # Spawn a new piece and stop the lock timer
-            self.tetris.spawn_tetromino()
-            self.lock_timer.stop()
-            self.lock = False
+        self.tetris.lock_active()  # Lock the piece to the board
+        self.tetris.check_rows()  # Check which rows to remove
+        # Signal to update next and scores
+        self.tetrominoqueue.emit()
+        self.score_label.emit('Score: ' + str(self.tetris._score))
+        # Spawn a new piece and stop the lock timer
+        self.tetris.spawn_tetromino()
+        self.lock_timer.stop()
+        self.lock = False
+        self.soft_drop = False
 
         self.update()
+
+    def game_tick(self):
+
+        if self.skips == self.nskips - 1 or self.soft_drop:
+            coll_id = self.tetris.game_tick()
+            # Checks if the lock event should initialize
+            if coll_id == 2:
+                if not self.lock:
+                    self.lock_timer.start(TetrisBoard.LOCKTIME)
+                    self.lock = True
+            self.skips = 0
+            self.update()
+        else:
+            self.skips += 1
 
     def paintEvent(self, event):
 
@@ -218,6 +228,19 @@ class TetrisBoard(QFrame):
             self.tetris.move_active(transl=[1, 0])
         elif key == Qt.Key_Up:
             self.tetris.move_active(rotdeg=90)
+        elif key == Qt.Key_Down and not event.isAutoRepeat():
+            if not self.soft_drop:
+                self.soft_drop = True
+
+        self.update()
+
+    def keyReleaseEvent(self, event):
+
+        # Get pressed key
+        key = event.key()
+
+        if key == Qt.Key_Down and not event.isAutoRepeat():
+            self.soft_drop = False
 
         self.update()
 
