@@ -2,7 +2,7 @@
 
 ### Todo
 - [x] Implement soft drop
-- [ ] Show only next piece, not a queue
+- [x] Show only next piece, not a queue
 - [ ] Implement hold functionality
 - [ ] Implement hard drop
 - [ ] Shading to show tetromino placement

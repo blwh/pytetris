@@ -7,7 +7,7 @@ class Tetris(object):
 
     """Docstring for Tetris. """
 
-    def __init__(self, width, height, queue_len=5):
+    def __init__(self, width, height, queue_len=1):
         """TODO: to be defined.
 
         :width: TODO
@@ -41,11 +41,16 @@ class Tetris(object):
 
         return next_tetromino
 
-    def active_blocks(self, pos=0):
+    def tetromino_blocks(self, active=True, pos=0):
         """
         """
-        blocks = self._active.get_blocks()
-        val = self._active._type.value
+        if active:
+            blocks = self._active.get_blocks()
+            val = self._active._type.value
+        else:
+            blocks = self._queue[pos].get_blocks()
+            val = self._queue[pos]._type.value
+
         for x, y in blocks:
             yield x, y, val
 

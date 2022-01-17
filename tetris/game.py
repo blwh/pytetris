@@ -27,7 +27,7 @@ class Window(QMainWindow):
 
         # The game dimensions
         self.tetrisdims = [10, 30]
-        self.scale_factor = 15
+        self.scale_factor = 20
 
         # Set the window size
         self.resize(250, 470)
@@ -63,13 +63,13 @@ class Window(QMainWindow):
 
         # Widget to show coming tetrominos
         self.tetrominoqueue = TetrominoQueue(self, self.tetris,
-                                             [5, 5*5 + 1])
+                                             [5, 1*5])
         self.tetrominoqueue.setStyleSheet("background-color: white;" +
                                           "border: 3px solid black;")
         self.tetrisboard.tetrominoqueue.connect(self.tetrominoqueue.update)
         self.tetrominoqueue.setGeometry(
                 20 + self.scale_factor*self.tetrisdims[0], 60,
-                self.scale_factor*5, self.scale_factor*(5*5+1))
+                self.scale_factor*5, self.scale_factor*(1*5))
 
         # Initialize the game
         self.tetrisboard.start()
@@ -104,17 +104,15 @@ class TetrominoQueue(QFrame):
 
         # board top
         boardtop = rect.top()
-        for pos in range(5):
-            for x, y, val in self._tetris.active_blocks(pos):
+        for pos in range(1):
+            for x, y, val in self._tetris.tetromino_blocks(active=False, pos=pos):
                 color = QColor(color_from_tetromino[val])
                 # painting rectangle
                 # TODO: This is a fucking mess, fix
                 painter.fillRect(
-                        rect.left() + x*self.square_width() + 1 +
-                        2*self.square_width(), boardtop +
-                        y*self.square_height()
-                        + 1 + 2*self.square_height() +
-                        5*pos*self.square_height(), self.square_width() - 2,
+                        rect.left() + (x+2)*self.square_width(),
+                        boardtop + (y+3)*self.square_height(),
+                        self.square_width() - 2,
                         self.square_height() - 2, color)
 
 
@@ -205,7 +203,7 @@ class TetrisBoard(QFrame):
                              boardtop + y * self.square_height(), val)
 
         # Draw the active Tetromino
-        for x, y, val in self.tetris.active_blocks():
+        for x, y, val in self.tetris.tetromino_blocks():
             self.draw_square(painter, rect.left() + x * self.square_width(),
                              boardtop + y * self.square_height(), val)
 
