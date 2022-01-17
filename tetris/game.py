@@ -62,6 +62,7 @@ class Window(QMainWindow):
         self.score.move(20 + self.scale_factor*self.tetrisdims[0], 20)
 
         # Widget to show coming tetrominos
+        # TODO: This is all a mess right now
         self.tetrominoqueue = TetrominoQueue(self, self.tetris,
                                              [5, 1*5])
         self.tetrominoqueue.setStyleSheet("background-color: white;" +
@@ -103,6 +104,7 @@ class TetrominoQueue(QFrame):
         boardtop = rect.bottom() - self.dims[1] * self.square_height()
 
         # board top
+        # TODO: This is a mess
         boardtop = rect.top()
         for pos in range(1):
             for x, y, val in self._tetris.tetromino_blocks(active=False, pos=pos):
