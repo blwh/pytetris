@@ -137,6 +137,8 @@ class TetrisBoard(QFrame):
         # msec per tick
         self.tick_interval = 50
 
+        self.level = 1  # Tetris game level
+
         # TODO: This might be a bit inefficient
         self.nskips = 3  # number of skipped ticks if not soft-dropping
         self.skips = 0
@@ -146,7 +148,7 @@ class TetrisBoard(QFrame):
         self.lock_timer = QTimer(self)
         self.lock_timer.timeout.connect(self.lock_event)
 
-        self.lock = False  # If lock timer is initialized
+        self.lock_activated = False  # If lock timer is initialized
         self.soft_drop = False  # If soft dropping
 
     def square_width(self):
@@ -171,8 +173,11 @@ class TetrisBoard(QFrame):
         # Spawn a new piece and stop the lock timer
         self.tetris.spawn_tetromino()
         self.lock_timer.stop()
-        self.lock = False
+        self.lock_activated = False
         self.soft_drop = False
+        # Moving to next level
+        if self.tetris._rows >= self.level*10:
+            self.next_level()
 
         self.update()
 
@@ -182,13 +187,22 @@ class TetrisBoard(QFrame):
             coll_id = self.tetris.game_tick()
             # Checks if the lock event should initialize
             if coll_id == 2:
-                if not self.lock:
+                if not self.lock_activated:
                     self.lock_timer.start(TetrisBoard.LOCKTIME)
-                    self.lock = True
+                    self.lock_activated = True
+            elif coll_id == 0 and self.lock_activated:
+                self.lock_timer.stop()
+                self.lock_activated = False
             self.skips = 0
             self.update()
         else:
             self.skips += 1
+
+    def next_level(self):
+
+        self.tick_interval -= 10
+        self.game_timer.setInterval(self.tick_interval)
+        self.level += 1
 
     def paintEvent(self, event):
 
@@ -209,10 +223,16 @@ class TetrisBoard(QFrame):
             self.draw_square(painter, rect.left() + x * self.square_width(),
                              boardtop + y * self.square_height(), val)
 
+        # Draw the active Tetromino
+        for x, y, val in self.tetris.shadow_tetromino_blocks():
+            self.draw_square(painter, rect.left() + x * self.square_width(),
+                             boardtop + y * self.square_height(), val)
+
     def draw_square(self, painter, x, y, val):
 
         # color
         color = QColor(color_from_tetromino[val])
+        # color.setAlpha(120)
         # painting rectangle
         painter.fillRect(x + 1, y + 1, self.square_width() - 2,
                          self.square_height() - 2, color)

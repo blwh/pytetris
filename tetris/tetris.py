@@ -19,6 +19,7 @@ class Tetris(object):
         self._board = np.zeros((self._width, self._height), dtype=int)
         self._active = None
         self._score = 0
+        self._rows = 0
         self._queue = []
         self._queue_len = queue_len
 
@@ -40,6 +41,16 @@ class Tetris(object):
             self._queue.append(tetromino.Tetromino(type_))
 
         return next_tetromino
+
+    # TODO: Fix function name and function
+    def shadow_tetromino_blocks(self):
+        """
+        """
+        blocks = self._active.get_blocks()
+        val = self._active._type.value
+
+        for x, y in blocks:
+            yield x, y, val
 
     def tetromino_blocks(self, active=True, pos=0):
         """
@@ -131,6 +142,7 @@ class Tetris(object):
             # Remove the rows and sum score
             # TODO: Count the scores correctly
             self._score += len(frows)
+            self._rows += len(frows)
             self._board[:, frows] = 0
 
             # Gravity - move all down to fill
