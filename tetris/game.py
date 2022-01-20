@@ -241,16 +241,22 @@ class TetrisBoard(QFrame):
 
         # Get pressed key
         key = event.key()
+        coll_id = -1
 
         if key == Qt.Key_Left:
-            self.tetris.move_active(transl=[-1, 0])
+            coll_id = self.tetris.move_active(transl=[-1, 0])
         elif key == Qt.Key_Right:
-            self.tetris.move_active(transl=[1, 0])
+            coll_id = self.tetris.move_active(transl=[1, 0])
         elif key == Qt.Key_Up:
-            self.tetris.move_active(rotdeg=90)
+            coll_id = self.tetris.move_active(rotdeg=90)
+        # holding the down key for soft drop
         elif key == Qt.Key_Down and not event.isAutoRepeat():
             if not self.soft_drop:
                 self.soft_drop = True
+
+        # Easy spin feature
+        if coll_id == 0 and self.lock_activated:
+            self.lock_timer.start(TetrisBoard.LOCKTIME)
 
         self.update()
 
