@@ -227,13 +227,14 @@ class TetrisBoard(QFrame):
         # Draw the active Tetromino
         for x, y, val in self.tetris.shadow_tetromino_blocks():
             self.draw_square(painter, rect.left() + x * self.square_width(),
-                             boardtop + y * self.square_height(), val)
+                             boardtop + y * self.square_height(), val,
+                             alpha=120)
 
-    def draw_square(self, painter, x, y, val):
+    def draw_square(self, painter, x, y, val, alpha=255):
 
         # color
         color = QColor(color_from_tetromino[val])
-        # color.setAlpha(120)
+        color.setAlpha(alpha)
         # painting rectangle
         painter.fillRect(x + 1, y + 1, self.square_width() - 2,
                          self.square_height() - 2, color)

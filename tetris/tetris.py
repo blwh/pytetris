@@ -66,12 +66,34 @@ class Tetris(object):
 
         return next_tetromino
 
+    def dist_to_bottom(self):
+        """
+        """
+        blocks = self._active.get_blocks()
+        # TODO: Make faster
+        # Perhaps by precalculating all shortest distances when a tetromino is
+        # spawned?
+        shortest_dist = self._height
+        for block in blocks:
+            col = self._board[block[0], block[1]:]
+            end_sites = np.where(col > 0)[0]
+            if len(end_sites) == 0:
+                end_site = self._height - block[1]
+            else:
+                end_site = end_sites[0]
+            if end_site < shortest_dist:
+                shortest_dist = end_site
+
+        return shortest_dist - 1
+
     # TODO: Fix function name and function
     def shadow_tetromino_blocks(self):
         """
         """
         blocks = self._active.get_blocks()
         val = self._active._type.value
+
+        blocks = self._active.get_blocks(transl=[0, self.dist_to_bottom()])
 
         for x, y in blocks:
             yield x, y, val
@@ -157,13 +179,14 @@ class Tetris(object):
         """
         coll_id = 0
         blocks = self._active.get_blocks(transl=transl, rotdeg=rotdeg)
+        print(blocks)
+        print(self._height)
         # If going outside of game board
         if blocks[:, 0].min() < 0 or blocks[:, 0].max() >= self._width:
             coll_id = 1
-        # Hits end or another block
-        elif max(blocks[:, 1]) == self._height:
+        elif max(blocks[:, 1]) >= self._height:  # hits end
             coll_id = 2
-        elif np.any(self._board[blocks[:, 0], blocks[:, 1]]):
+        elif np.any(self._board[blocks[:, 0], blocks[:, 1]]):  # hits another
             coll_id = 2
 
         return coll_id
@@ -199,3 +222,10 @@ class Tetris(object):
             temp = self._board[:, nzrows]
             self._board *= 0
             self._board[:, nind] = temp
+
+
+if __name__ == "__main__":
+    tetris = Tetris(10, 20)
+    tetris.spawn_tetromino()
+    tetris.shadow_tetromino_blocks()
+    print('ok')
