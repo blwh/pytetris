@@ -72,9 +72,62 @@ class Window(QMainWindow):
                 20 + self.scale_factor*self.tetrisdims[0], 60,
                 self.scale_factor*5, self.scale_factor*(1*5))
 
+        self.tetrominohold = TetrominoHold(self, self.tetris,
+                                           [5, 1*5])
+        self.tetrominohold.setStyleSheet("background-color: white;" +
+                                         "border: 3px solid black;")
+        self.tetrisboard.tetrominohold.connect(self.tetrominohold.update)
+        self.tetrominohold.setGeometry(
+                20 + self.scale_factor*self.tetrisdims[0], 200,
+                self.scale_factor*5, self.scale_factor*(1*5))
+
         # Initialize the game
         self.tetrisboard.start()
         self.tetrominoqueue.update()
+
+
+class TetrominoHold(QFrame):
+
+    # constructor
+    def __init__(self, parent, tetris, dims):
+        super(TetrominoHold, self).__init__(parent)
+
+        self._tetris = tetris
+        self.dims = dims
+
+    def square_width(self):
+        return int(self.contentsRect().width()/self.dims[0])
+
+    def square_height(self):
+        return int(self.contentsRect().height()/self.dims[1])
+
+    def paintEvent(self, event):
+
+        # Painter object
+        painter = QPainter(self)
+
+        # The area inside the widget's margins
+        rect = self.contentsRect()
+
+        # board top
+        boardtop = rect.bottom() - self.dims[1] * self.square_height()
+
+        # board top
+        # TODO: This is a mess
+        boardtop = rect.top()
+        if self._tetris._hold is not None:
+            for pos in range(1):
+                for x, y, val in self._tetris.hold_tetromino_blocks():
+                    color = QColor(color_from_tetromino[val])
+                    # painting rectangle
+                    # TODO: This is a fucking mess, fix
+                    painter.fillRect(
+                            rect.left() + x*self.square_width() +
+                            int(rect.width()/2),
+                            boardtop + y*self.square_height() +
+                            int(rect.height()/2),
+                            self.square_width() - 2,
+                            self.square_height() - 2, color)
 
 
 class TetrominoQueue(QFrame):
@@ -113,16 +166,19 @@ class TetrominoQueue(QFrame):
                 # painting rectangle
                 # TODO: This is a fucking mess, fix
                 painter.fillRect(
-                        rect.left() + (x+2)*self.square_width(),
-                        boardtop + (y+3)*self.square_height(),
-                        self.square_width() - 2,
-                        self.square_height() - 2, color)
+                            rect.left() + x*self.square_width() +
+                            int(rect.width()/2),
+                            boardtop + y*self.square_height() +
+                            int(rect.height()/2),
+                            self.square_width() - 2,
+                            self.square_height() - 2, color)
 
 
 class TetrisBoard(QFrame):
 
     score_label = pyqtSignal(str)
     tetrominoqueue = pyqtSignal()
+    tetrominohold = pyqtSignal()
 
     # Lock time (ms)
     LOCKTIME = 500
@@ -172,7 +228,9 @@ class TetrisBoard(QFrame):
         self.tetrominoqueue.emit()
         self.score_label.emit('Score: ' + str(self.tetris._score))
         # Spawn a new piece and stop the lock timer
-        self.tetris.spawn_tetromino()
+        if not self.tetris.spawn_tetromino():
+            print('Game over!')
+            self.game_timer.stop()
         self.lock_timer.stop()
         self.lock_activated = False
         self.soft_drop = False
@@ -236,8 +294,8 @@ class TetrisBoard(QFrame):
         color = QColor(color_from_tetromino[val])
         color.setAlpha(alpha)
         # painting rectangle
-        painter.fillRect(x + 1, y + 1, self.square_width() - 2,
-                         self.square_height() - 2, color)
+        painter.fillRect(x + 1, y + 1, self.square_width() - 1,
+                         self.square_height() - 1, color)
 
     def keyPressEvent(self, event):
 
@@ -251,6 +309,16 @@ class TetrisBoard(QFrame):
             coll_id = self.tetris.move_active(transl=[1, 0])
         elif key == Qt.Key_Up:
             coll_id = self.tetris.move_active(rotdeg=90)
+        elif key == Qt.Key_Control:
+            coll_id = self.tetris.move_active(rotdeg=-90)
+        elif key == Qt.Key_Shift:  # Hold piece
+            self.tetris.hold_active()
+            self.tetrominohold.emit()
+        elif key == Qt.Key_Space:  # Hard drop
+            dist_to_bottom = self.tetris.dist_to_bottom()
+            self.tetris.move_active(transl=[0, dist_to_bottom])
+            self.lock_activated = True
+            self.lock_timer.start(0)
         # holding the down key for soft drop
         elif key == Qt.Key_Down and not event.isAutoRepeat():
             if not self.soft_drop:

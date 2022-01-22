@@ -42,6 +42,7 @@ class Tetris(object):
         self._height = height
         self._board = np.zeros((self._width, self._height), dtype=int)
         self._active = None
+        self._hold = None
         self._score = 0
         self._rows = 0
         self._queue = []
@@ -66,6 +67,18 @@ class Tetris(object):
 
         return next_tetromino
 
+    def hold_active(self):
+        """
+        """
+        self._active.reset()
+        if self._hold is None:
+            self._hold = self._active
+            self.spawn_tetromino()
+        else:
+            temp = self._hold
+            self._hold = self._active
+            self.spawn_tetromino(temp)
+
     def dist_to_bottom(self):
         """
         """
@@ -86,15 +99,22 @@ class Tetris(object):
 
         return shortest_dist - 1
 
+    def hold_tetromino_blocks(self):
+        """
+        """
+        if self._hold is None:
+            yield None
+        blocks = self._hold.get_blocks()
+        val = self._hold._type.value
+        for x, y in blocks:
+            yield x, y, val
+
     # TODO: Fix function name and function
     def shadow_tetromino_blocks(self):
         """
         """
-        blocks = self._active.get_blocks()
-        val = self._active._type.value
-
         blocks = self._active.get_blocks(transl=[0, self.dist_to_bottom()])
-
+        val = self._active._type.value
         for x, y in blocks:
             yield x, y, val
 
@@ -121,17 +141,25 @@ class Tetris(object):
                 if self._board[j, i] != 0:
                     yield j, i, self._board[j, i]
 
-    def spawn_tetromino(self):
+    def spawn_tetromino(self, piece=None):
         """TODO: Docstring for add_tetromino.
 
         :f: TODO
         :returns: TODO
 
         """
-        self._active = self._next_tetromino()
+        if piece is None:
+            self._active = self._next_tetromino()
+        else:
+            self._active = piece
         # Initial placement is middle justified by tetromino height
-        self._active.move(transl=[int(self._width/2),
-                                  -min(self._active.get_blocks()[:, 1])])
+        coll_id = self.move_active(transl=[int(self._width/2),
+                                   -min(self._active.get_blocks()[:, 1])],
+                                   force=True)
+        if coll_id != 0:
+            return False
+
+        return True
 
     def game_tick(self):
         """TODO: Docstring for move_active.
@@ -144,7 +172,7 @@ class Tetris(object):
 
         return coll_id
 
-    def move_active(self, transl=[0, 0], rotdeg=0):
+    def move_active(self, transl=[0, 0], rotdeg=0, force=False):
         """
         """
         if np.any(transl) and rotdeg > 0:
@@ -167,7 +195,7 @@ class Tetris(object):
                     transl = move
                     break
 
-        if coll_id == 0:
+        if coll_id == 0 or force:
             self._active.move(transl=transl, rotdeg=rotdeg)
 
         return coll_id
@@ -179,8 +207,6 @@ class Tetris(object):
         """
         coll_id = 0
         blocks = self._active.get_blocks(transl=transl, rotdeg=rotdeg)
-        print(blocks)
-        print(self._height)
         # If going outside of game board
         if blocks[:, 0].min() < 0 or blocks[:, 0].max() >= self._width:
             coll_id = 1
@@ -222,10 +248,3 @@ class Tetris(object):
             temp = self._board[:, nzrows]
             self._board *= 0
             self._board[:, nind] = temp
-
-
-if __name__ == "__main__":
-    tetris = Tetris(10, 20)
-    tetris.spawn_tetromino()
-    tetris.shadow_tetromino_blocks()
-    print('ok')

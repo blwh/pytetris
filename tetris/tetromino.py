@@ -39,7 +39,7 @@ class Tetromino(object):
 
         # Center is standard, except for I and O
         self._center = [0, 0]
-        if type_ == Tetrominoes.O or type_ == Tetrominoes.I:
+        if self._type in [Tetrominoes.O, Tetrominoes.I]:
             self._center = [-0.5, -0.5]
 
     def move(self, transl=[0, 0], rotdeg=0, set_=True):
@@ -95,6 +95,13 @@ class Tetromino(object):
         bl[:, 1] += center[1]
 
         return bl.astype(int)
+
+    def reset(self):
+        """Resets rotation and position."""
+        self._center = [0, 0]
+        if self._type in [Tetrominoes.O, Tetrominoes.I]:
+            self._center = [-0.5, -0.5]
+        self.move(rotdeg=-self.rotation)
 
     def get_state(self):
         """"""
