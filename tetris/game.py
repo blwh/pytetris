@@ -12,8 +12,8 @@ import sys
 from tetris import Tetris
 
 # Dict mapping tetromino value to color
-color_from_tetromino = {1: '#047af6', 2: '#dcaa15', 3: '#f1c74c', 4: '#afeeee',
-                        5: '#7401df', 6: '#32fa00', 7: '#f40073'}
+color_from_tetromino = {1: '#5a65ad', 2: '#ef7921', 3: '#f7d308', 4: '#31c7ef',
+                        5: '#ad4d9c', 6: '#42b642', 7: '#ef2029'}
 
 
 # creating game window

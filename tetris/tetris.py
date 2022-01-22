@@ -3,8 +3,8 @@ import tetromino
 import random
 
 
-SRS_Rotation_Mat = {
-        'other': {
+SRS_Rotation = {
+        'normal': {
             0: {1: [[-1, 0], [-1, 1], [0, -2], [-1, -2]],
                 3: [[1, 0], [1, 1], [0, -2], [1, -2]]},
             1: {0: [[1, 0], [1, -1], [0, 2], [1, 2]],
@@ -136,9 +136,9 @@ class Tetris(object):
             new_state = self._active.new_state(rotdeg)
             srs_moves = []
             if self._active._type == tetromino.Tetrominoes.I:
-                srs_moves = SRS_Rotation_Mat['I'][initial_state][new_state]
+                srs_moves = SRS_Rotation['I'][initial_state][new_state]
             elif self._active._type != tetromino.Tetrominoes.O:
-                srs_moves = SRS_Rotation_Mat['other'][initial_state][new_state]
+                srs_moves = SRS_Rotation['normal'][initial_state][new_state]
             for move in srs_moves:
                 coll_id = self.move_collision(transl=move, rotdeg=rotdeg)
                 if coll_id == 0:
@@ -155,16 +155,18 @@ class Tetris(object):
 
         :returns: 1 if edge collision, 2 if block collision, 0 if none
         """
+        coll_id = 0
         blocks = self._active.get_blocks(transl=transl, rotdeg=rotdeg)
         # If going outside of game board
         if blocks[:, 0].min() < 0 or blocks[:, 0].max() >= self._width:
-            return 1
+            coll_id = 1
         # Hits end or another block
-        elif max(blocks[:, 1]) == self._height \
-                or np.any(self._board[blocks[:, 0], blocks[:, 1]]):
-            return 2
+        elif max(blocks[:, 1]) == self._height:
+            coll_id = 2
+        elif np.any(self._board[blocks[:, 0], blocks[:, 1]]):
+            coll_id = 2
 
-        return 0
+        return coll_id
 
     def lock_active(self):
         """
