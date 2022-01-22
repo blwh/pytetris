@@ -1,5 +1,5 @@
 # PyQt5 imports
-from PyQt5.QtCore import QTimer, QBasicTimer, Qt, pyqtSignal
+from PyQt5.QtCore import QTimer, Qt, pyqtSignal
 from PyQt5.QtWidgets import (
         QMainWindow, QApplication, QFrame, QWidget, QLabel
         )
@@ -27,7 +27,7 @@ class Window(QMainWindow):
 
         # The game dimensions
         self.tetrisdims = [10, 30]
-        self.scale_factor = 20
+        self.scale_factor = 15
 
         # Set the window size
         self.resize(250, 470)
@@ -107,7 +107,8 @@ class TetrominoQueue(QFrame):
         # TODO: This is a mess
         boardtop = rect.top()
         for pos in range(1):
-            for x, y, val in self._tetris.tetromino_blocks(active=False, pos=pos):
+            for x, y, val in self._tetris.tetromino_blocks(active=False,
+                                                           pos=pos):
                 color = QColor(color_from_tetromino[val])
                 # painting rectangle
                 # TODO: This is a fucking mess, fix
@@ -256,6 +257,7 @@ class TetrisBoard(QFrame):
 
         # Easy spin feature
         if coll_id == 0 and self.lock_activated:
+            self.lock_timer.stop()
             self.lock_timer.start(TetrisBoard.LOCKTIME)
 
         self.update()

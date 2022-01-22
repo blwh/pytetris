@@ -33,6 +33,8 @@ class Tetromino(object):
         self._type = type_
         self._blocks = np.array(blockpos_from_tetromino[self._type],
                                 dtype=float)
+        self.rotation_state = 0
+
         # Center is standard, except for I and O
         self._center = [0, 0]
         if type_ == Tetrominoes.O or type_ == Tetrominoes.I:
