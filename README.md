@@ -7,10 +7,12 @@ modules).
 - [x] Implement soft drop
 - [x] Show only next piece, not a queue
 - [x] Fix proper rotations so T-spins are viable
-- [ ] Shading to show tetromino placement
-- [ ] Implement hold functionality
-- [ ] Implement hard drop
+- [x] Shading to show tetromino placement
+- [x] Fix game over
+- [x] Implement hold functionality
+- [x] Implement hard drop
 - [ ] Calculate score correctly
 - [x] Better Tetromino colors
+- [ ] Clean up GUI code
 - [ ] (Unimportant) Dynamic placement of game
 - [ ] (Unimportant) Proper class/function descriptions
