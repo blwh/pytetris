@@ -3,6 +3,30 @@ import tetromino
 import random
 
 
+SRS_Rotation_Mat = {
+        'other': {
+            0: {1: [[-1, 0], [-1, 1], [0, -2], [-1, -2]],
+                3: [[1, 0], [1, 1], [0, -2], [1, -2]]},
+            1: {0: [[1, 0], [1, -1], [0, 2], [1, 2]],
+                2: [[1, 0], [1, -1], [0, 2], [1, 2]]},
+            2: {1: [[-1, 0], [-1, 1], [0, -2], [-1, -2]],
+                3: [[1, 0], [1, 1], [0, -2], [1, -2]]},
+            3: {2: [[-1, 0], [-1, -1], [0, 2], [-1, 2]],
+                0: [[-1, 0], [-1, -1], [0, 2], [-1, 2]]}
+        },
+        'I': {
+            0: {1: [[-2, 0], [1, 0], [-2, -1], [1, 2]],
+                3: [[-1, 0], [2, 0], [-1, 2], [2, -1]]},
+            1: {0: [[2, 0], [-1, 0], [2, 1], [-1, -2]],
+                2: [[-1, 0], [2, 0], [-1, 2], [2, -1]]},
+            2: {1: [[1, 0], [-2, 0], [1, -2], [-2, 1]],
+                3: [[2, 0], [-1, 0], [2, 1], [-1, -2]]},
+            3: {2: [[-2, 0], [1, 0], [-2, -1], [1, 2]],
+                0: [[1, 0], [-2, 0], [1, -2], [-2, 1]]}
+        }
+}
+
+
 class Tetris(object):
 
     """Docstring for Tetris. """
@@ -101,7 +125,26 @@ class Tetris(object):
     def move_active(self, transl=[0, 0], rotdeg=0):
         """
         """
+        if np.any(transl) and rotdeg > 0:
+            raise AttributeError('translation and rotation cannot occur' +
+                                 'simultaneously')
+
         coll_id = self.move_collision(transl=transl, rotdeg=rotdeg)
+        # Go through the SRS list
+        if coll_id != 0 and rotdeg > 0:
+            initial_state = self._active.get_state()
+            new_state = self._active.new_state(rotdeg)
+            srs_moves = []
+            if self._active._type == tetromino.Tetrominoes.I:
+                srs_moves = SRS_Rotation_Mat['I'][initial_state][new_state]
+            elif self._active._type != tetromino.Tetrominoes.O:
+                srs_moves = SRS_Rotation_Mat['other'][initial_state][new_state]
+            for move in srs_moves:
+                coll_id = self.move_collision(transl=move, rotdeg=rotdeg)
+                if coll_id == 0:
+                    transl = move
+                    break
+
         if coll_id == 0:
             self._active.move(transl=transl, rotdeg=rotdeg)
 

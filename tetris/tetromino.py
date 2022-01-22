@@ -3,6 +3,7 @@ import math
 import enum
 
 
+"""Tetrominoes"""
 class Tetrominoes(enum.Enum):
     J = 1
     L = 2
@@ -13,11 +14,12 @@ class Tetrominoes(enum.Enum):
     Z = 7
 
 
+"""Position of the tetromino blocks relative to center."""
 blockpos_from_tetromino = {
         Tetrominoes.J: [[0, 0], [-1, -1], [-1, 0], [1, 0]],
         Tetrominoes.L: [[0, 0], [-1, 0], [1, 0], [1, -1]],
         Tetrominoes.O: [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]],
-        Tetrominoes.I: [[0.5, -1.5], [0.5, -0.5], [0.5, 0.5], [0.5, 1.5]],
+        Tetrominoes.I: [[-1.5, -0.5], [-0.5, -0.5], [0.5, -0.5], [1.5, -0.5]],
         Tetrominoes.T: [[0, 0], [0, -1], [-1, 0], [1, 0]],
         Tetrominoes.S: [[0, 0], [-1, 0], [0, -1], [1, -1]],
         Tetrominoes.Z: [[0, 0], [-1, -1], [0, -1], [1, 0]]
@@ -33,7 +35,7 @@ class Tetromino(object):
         self._type = type_
         self._blocks = np.array(blockpos_from_tetromino[self._type],
                                 dtype=float)
-        self.rotation_state = 0
+        self.rotation = 0
 
         # Center is standard, except for I and O
         self._center = [0, 0]
@@ -47,7 +49,6 @@ class Tetromino(object):
         :returns: TODO
 
         """
-
         # With set_, the class variables are set. Otherwise returned
         if set_:
             center = self._center
@@ -63,6 +64,8 @@ class Tetromino(object):
 
         # Rotate the block
         if rotdeg != 0:
+            if set_:  # map 0 -> 360
+                self.rotation = (self.rotation + rotdeg) % 360
             rot = math.radians(rotdeg)
             x = blocks[:, 0].copy()
             y = blocks[:, 1].copy()
@@ -92,3 +95,11 @@ class Tetromino(object):
         bl[:, 1] += center[1]
 
         return bl.astype(int)
+
+    def get_state(self):
+        """"""
+        return int(self.rotation/90)
+
+    def new_state(self, rotdeg):
+        """"""
+        return int(((self.rotation + rotdeg) % 360)/90)
